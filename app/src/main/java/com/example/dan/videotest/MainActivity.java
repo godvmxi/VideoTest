@@ -1,5 +1,6 @@
 package com.example.dan.videotest;
 
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -39,6 +40,13 @@ public class MainActivity extends AppCompatActivity {
         textViewCurFile = (TextView)findViewById(R.id.textViewCurFile);
         textViewFileList = (TextView)findViewById(R.id.textViewFileList);
         videoView = (VideoView)findViewById(R.id.videoView);
+        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                Log.d(TAG, "onPrepared: " + mp.getDuration());
+                Toast.makeText(getApplicationContext(), "video length " +mp.getDuration(),1500).show();
+            }
+        });
 
 
         fileIndex = 0;
@@ -54,18 +62,30 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 Log.d(TAG, "onClick: ");
+                //File fileDir = new File("/mnt/sdcard/Movies");
                 File fileDir = new File("/mnt/sdcard/Movies");
                 Log.d(TAG, "onClick: read ->"+ fileDir.canRead());
                 Log.d(TAG, "onClick: write ->"+ fileDir.canWrite());
                 fileList = fileDir.listFiles();
-                String fileListString = new String("File list -> ");
-                for(int i = 0 ;i < fileList.length;i++){
-                    Log.d(TAG, "file list -> : " + fileList[i].toString());
-                    fileListString = fileListString + "\n" + fileList[i].toString();
+
+                if(fileList.length > 0 ) {
+                    String fileListString = new String("File list -> ");
+                    for (int i = 0; i < fileList.length; i++) {
+                        Log.d(TAG, "file list -> : " + fileList[i].toString());
+                        fileListString = fileListString + "\n" + fileList[i].toString();
+                    }
+                    fileIndex = 0;
+                    textViewFileList.setText(fileListString);
+                    textViewCurFile.setText(fileList.length + ":" + fileIndex + "->" + fileList[fileIndex].toString());
                 }
-                fileIndex = 0;
-                textViewFileList.setText(fileListString);
-                textViewCurFile.setText(fileList.length+":"+ fileIndex+"->" + fileList[fileIndex].toString());
+                else {
+                    fileIndex = 0;
+                    fileList =  new File[]{};
+                    Toast.makeText(getApplicationContext(), "no file in target dir",500).show();
+                    String fileListString = new String("File list -> NULL");
+                    textViewFileList.setText(fileListString);
+                    textViewCurFile.setText(fileList.length+":0-> NULL");
+                }
             }
         });
 
@@ -73,9 +93,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //videoView.stopPlayback();
-                String curFile = fileList[fileIndex].toString();
-                videoView.setVideoURI(Uri.parse(curFile));
-                videoView.start();
+                if(fileList.length > 0) {
+                    String curFile = fileList[fileIndex].toString();
+                    videoView.setVideoURI(Uri.parse(curFile));
+                    videoView.start();
+                }
+                else {
+                    Toast.makeText(getApplicationContext(), "no file in target dir",1500).show();
+                }
             }
         });
 
